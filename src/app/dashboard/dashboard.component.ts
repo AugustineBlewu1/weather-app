@@ -1,17 +1,126 @@
-import { ChartDataType } from './../../constants/types';
+import {
+  ChartDataType,
+  LocationData,
+  WeatherData,
+} from './../../constants/types';
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CanvasJSAngularChartsModule } from '@canvasjs/angular-charts';
+import { HttpService } from '../http.service';
+import { error } from 'console';
+import { format, getHours } from "date-fns";
+import { CapitalizeFirstPipe } from '../capitalize-first.pipe';
+
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CanvasJSAngularChartsModule, CommonModule],
+  imports: [CanvasJSAngularChartsModule, CommonModule, CapitalizeFirstPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
+  getLocation = signal<LocationData | undefined>(undefined);
+  weatherData = signal<WeatherData | undefined>(undefined);
+  modeofDay = signal<string>("");
+
+
+
+  dateFormat(date: string, formatData: string){
+    // this.getModeofDay(date)
+    return format( date === "" ? Date.now() : Date.parse(date), formatData)
+  }
+
+ 
+
   //Chart options for table 1
+
+ 
+
+  getModeofDay(){
+    var hours = getHours(this.weatherData()?.current?.time === undefined ? Date.now() : Date.parse(this.weatherData()?.current.time ?? ""))
+    var message = hours < 12 ? 'Good Morning' : hours < 18 ? 'Good Afternoon' : 'Good Evening'
+    this.modeofDay.set(message);
+
+  }
+
+  constructor(private httpservice: HttpService) {}
+
+  ngOnInit(): void {
+  //  this.initilizeWeatherData()
+
+
+  }
+//   {
+//     "time": "2024-06-03T20:37+01:00",
+//     "symbol": "n300",
+//     "symbolPhrase": "cloudy",
+//     "temperature": 31,
+//     "feelsLikeTemp": 40,
+//     "relHumidity": 77,
+//     "dewPoint": 26,
+//     "windSpeed": 1,
+//     "windDir": 200,
+//     "windDirString": "S",
+//     "windGust": 3,
+//     "precipProb": 3,
+//     "precipRate": 0.03,
+//     "cloudiness": 78,
+//     "thunderProb": 0,
+//     "uvIndex": 0,
+//     "pressure": 1006.99,
+//     "visibility": 15481
+// }
+
+  //this section initializes the weather data 
+
+  initilizeWeatherData(){
+     this.httpservice
+      .get('location/search/mumbai', {
+        lang: 'en',
+        country: 'in',
+      })
+      .subscribe({
+        next: (e: any) => {
+          this.getLocation.set(e['locations'][0]);
+          this.getWeatherData(e['locations'][0]?.id);
+          console.log(e);
+        },
+        error: (e) => {
+          console.log(e);
+        },
+        complete: () => {
+          console.log(this.getLocation);
+        },
+      });
+  }
+
+  //get weather data
+
+  getWeatherData(locationId: number) {
+    this.httpservice
+      .get(`current/${locationId}`, {
+        alt: '0',
+        tempunit: 'C',
+        windunit: 'MS',
+        tz: 'Europe/London',
+        lang: 'en',
+      })
+      .subscribe({
+        next: (e: any) => {
+          console.log(e);
+          this.weatherData.set(e)
+        },
+        error: (e) => {
+          console.log(e);
+        },
+        complete: () => {
+          this.getModeofDay()
+          console.log(this.getLocation);
+        },
+      });
+  }
+
   dps = signal<ChartDataType[]>([
     { x: 1, y: 10 },
     { x: 2, y: 13 },
@@ -74,12 +183,12 @@ export class DashboardComponent {
     title: {
       text: 'Monthly rainfull',
       dockInsidePlotArea: false,
-      horizontalAlign: "left",
-      fontWeight: "semi-bold",
+      horizontalAlign: 'left',
+      fontWeight: 'semi-bold',
       fontSize: 20,
       padding: {
-        bottom:10
-      }
+        bottom: 10,
+      },
     },
     axisX: {
       labelAngle: -90,
@@ -105,7 +214,7 @@ export class DashboardComponent {
     data: [
       {
         type: 'column',
-      
+
         legendText: 'Degree Celcius',
         showInLegend: true,
         dataPoints: [

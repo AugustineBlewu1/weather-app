@@ -26,10 +26,12 @@ export class HttpService {
 
   //setup request and pipe result
 
-  get<T>(endpoint: string): Observable<T> {
+  get<T>(endpoint: string, params?: any): Observable<T> {
+    console.log(this.baseUrl)
     return this.http
       .get<T>(`${this.baseUrl}/${endpoint}`, {
         headers: this.defaultHeaders,
+        params: params
       })
       .pipe(catchError(this.handleError));
   }
