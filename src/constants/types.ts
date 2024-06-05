@@ -23,6 +23,7 @@ export interface WeatherData {
       relHumidity: number;
       dewPoint: number;
       windSpeed: number;
+      windDir: number;
       windDirString: string;
       windGust: number;
       precipProb: number;
@@ -33,4 +34,26 @@ export interface WeatherData {
       pressure: number;
       visibility: number;
     };
+  }
+export interface ForecastData {
+    
+      time: string;
+      symbol: string;
+      symbolPhrase: string;
+      temperature: number;
+      feelsLikeTemp: number;
+      relHumidity: number;
+      dewPoint: number;
+      windSpeed: number;
+      windDir: number;
+      windDirString: string;
+      windGust: number;
+      precipProb: number;
+      precipRate: number;
+      cloudiness: number;
+      thunderProb: number;
+      uvIndex: number;
+      pressure: number;
+      visibility: number;
+
   }

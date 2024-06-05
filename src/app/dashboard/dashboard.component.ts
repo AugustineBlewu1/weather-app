@@ -1,5 +1,6 @@
 import {
   ChartDataType,
+  ForecastData,
   LocationData,
   WeatherData,
 } from './../../constants/types';
@@ -22,7 +23,9 @@ import { CapitalizeFirstPipe } from '../capitalize-first.pipe';
 export class DashboardComponent implements OnInit {
   getLocation = signal<LocationData | undefined>(undefined);
   weatherData = signal<WeatherData | undefined>(undefined);
+  forecastData = signal<ForecastData[] | undefined>([]);
   modeofDay = signal<string>("");
+  backgroundOfDay = signal<string>("");
 
 
 
@@ -40,37 +43,20 @@ export class DashboardComponent implements OnInit {
   getModeofDay(){
     var hours = getHours(this.weatherData()?.current?.time === undefined ? Date.now() : Date.parse(this.weatherData()?.current.time ?? ""))
     var message = hours < 12 ? 'Good Morning' : hours < 18 ? 'Good Afternoon' : 'Good Evening'
+    var backgroundofday = hours < 12 ? 'bg-top-bottom' : hours < 18 ? 'bg-right-bottom' : 'bg-top'
     this.modeofDay.set(message);
+    this.backgroundOfDay.set(backgroundofday)
 
+    console.log(this.backgroundOfDay())
   }
 
   constructor(private httpservice: HttpService) {}
 
   ngOnInit(): void {
-  //  this.initilizeWeatherData()
+   this.initilizeWeatherData()
 
 
   }
-//   {
-//     "time": "2024-06-03T20:37+01:00",
-//     "symbol": "n300",
-//     "symbolPhrase": "cloudy",
-//     "temperature": 31,
-//     "feelsLikeTemp": 40,
-//     "relHumidity": 77,
-//     "dewPoint": 26,
-//     "windSpeed": 1,
-//     "windDir": 200,
-//     "windDirString": "S",
-//     "windGust": 3,
-//     "precipProb": 3,
-//     "precipRate": 0.03,
-//     "cloudiness": 78,
-//     "thunderProb": 0,
-//     "uvIndex": 0,
-//     "pressure": 1006.99,
-//     "visibility": 15481
-// }
 
   //this section initializes the weather data 
 
@@ -84,6 +70,7 @@ export class DashboardComponent implements OnInit {
         next: (e: any) => {
           this.getLocation.set(e['locations'][0]);
           this.getWeatherData(e['locations'][0]?.id);
+          this.getForecastData(e['locations'][0]?.id);
           console.log(e);
         },
         error: (e) => {
@@ -96,7 +83,6 @@ export class DashboardComponent implements OnInit {
   }
 
   //get weather data
-
   getWeatherData(locationId: number) {
     this.httpservice
       .get(`current/${locationId}`, {
@@ -110,6 +96,33 @@ export class DashboardComponent implements OnInit {
         next: (e: any) => {
           console.log(e);
           this.weatherData.set(e)
+        },
+        error: (e) => {
+          console.log(e);
+        },
+        complete: () => {
+          this.getModeofDay()
+          console.log(this.getLocation);
+        },
+      });
+  }
+
+  //get weather data
+  getForecastData(locationId: number) {
+    this.httpservice
+      .get(`forecast/hourly/${locationId}`, {
+        alt: '0',
+        tempunit: 'C',
+        windunit: 'MS',
+        tz: 'Europe/London',
+        periods: '7',
+        dataset: 'full',
+        history: 'false'
+      })
+      .subscribe({
+        next: (e: any) => {
+          console.log(e);
+          this.forecastData.set(e?.forecast)
         },
         error: (e) => {
           console.log(e);
@@ -141,7 +154,7 @@ export class DashboardComponent implements OnInit {
       text: 'Hourly Forcast',
       dockInsidePlotArea: false,
       horizontalAlign: 'left',
-      fontSize: 20,
+      fontSize: 40,
       fontWeight: 'semi-bold',
       padding: {
         top: 1,

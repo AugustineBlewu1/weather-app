@@ -27,7 +27,7 @@ module.exports = {
         success: '#00C851', // Green for success icons
       },
       fontFamily: {
-        sans: ['Roboto', 'sans-serif'],
+        sans: ['Nunito', 'sans-serif'],
       },
       fontSize: {
         '3xl': '2rem', // Large headings
